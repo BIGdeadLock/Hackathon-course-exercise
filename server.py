@@ -6,7 +6,6 @@ import time
 
 server_port = 13117
 
-pk = OfferPacket(server_port)
 sender = Sender(server_port)
 
 #  Start sending offer packets

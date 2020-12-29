@@ -23,7 +23,7 @@ class Sender(Thread):
         future = now + 10
 
         while time.time() < future:
-            server.sendto(self.offer_packet.getData(), ('192.168.1.255', self.__port_number))
+            server.sendto(self.offer_packet.getData(), ('<broadcast>', self.__port_number))
             print("message sent!")
             time.sleep(1)
         
