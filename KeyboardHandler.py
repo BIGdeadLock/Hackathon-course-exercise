@@ -2,13 +2,13 @@ import msvcrt
 import time
 # ...
 
-def run_game():
-#Game runs for 10 seconds
+def run_game(server_port):
+    #Game runs for 10 seconds
     now = time.time()
     future = now + 10
 
     char =""
-    print("Start pressing keys on your keyboard as fast as you can!!")
+  #  print("Start pressing keys on your keyboard as fast as you can!!")
     hurry = True
     while time.time() < future:
         char += msvcrt.getch().decode('ASCII')

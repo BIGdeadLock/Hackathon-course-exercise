@@ -32,10 +32,7 @@ class ClientThread(Thread):
             except socket.timeout:
                 break
 
-
         self.connection.sendall(get_welcome_message().encode("utf-8"))
-
-        self.
         self.connection.close()
 
 def get_welcome_message():
@@ -84,7 +81,7 @@ while True:
 
 ServerSocket.close()
 
-run_game()
+#run_game()
 
 
 

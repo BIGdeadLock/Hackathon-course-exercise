@@ -2,7 +2,22 @@ import socket
 import struct
 from offer import OfferPacket
 import scapy.all as scapy
+import time 
+import msvcrt
 
+def run_game():
+    #Game runs for 10 seconds
+    now = time.time()
+    future = now + 10
+
+    char =""
+    hurry = True
+    while time.time() < future:
+        char = msvcrt.getch().decode('ASCII')
+        client.sendall(char)
+        if future - time.time() < 3 and hurry:
+            hurry = False
+            print("Hurry!! You have less than 3 seconds left!!")
 
 serverName='serverName'
 #server_port = 13117
@@ -51,11 +66,15 @@ team_name ="GUY2\n"
 client.sendall(team_name.encode('utf-8'))
 
 #get the welcome message from the server and print to the screen
-client.settimeout(10)
 welcome_message = client.recv(1024*4).decode("ASCII")
 print(welcome_message)
 
+#run the game and press as many keys as you can
+run_game()
 
+#get the end message from the server for the score outcomes and print to the screen
+end_message = client.recv(1024*4).decode("ASCII")
+print(end_message)
 
 # clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # clientSocket.listen(server_port)
