@@ -100,8 +100,8 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
         group_message += "ITS A DRAW!\n\n"
     else:
         group_message += f"Group {winner_id} wins!. \n\n"
-        group_message += "Congratulations to the winners:"
-        group_message += "\n==\n"
+        group_message += "Congratulations to the winners:\n"
+        group_message += "==\n"
         for team in teams[winner_id]:
             group_message+= f"{team}\n"
 
@@ -163,12 +163,3 @@ while True:
 
 
 ServerSocket.close()
-
-#run_game()
-
-
-
-
-
-print("Game over! Group 1 typed in 104 characters. Group 2 typed in 28 characters."+
-"Group 1 wins! Congratulations to the winners: =="+ "TEAMS")
