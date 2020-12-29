@@ -24,6 +24,5 @@ class Sender(Thread):
 
         while time.time() < future:
             server.sendto(self.offer_packet.getData(), ('<broadcast>', self.__port_number))
-            print("message sent!")
             time.sleep(1)
         
