@@ -2,9 +2,11 @@ import socket
 import struct
 from offer import OfferPacket
 
-serverName='serverName'
-server_port = 13117
 
+
+serverName='serverName'
+#server_port = 13117
+server_port = 13000
 
 # Listen for broadcast of UDP from the server
 sentence = print('Client started, listening for offer requests...')
@@ -13,7 +15,8 @@ client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
 # Enable broadcasting mode
 client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-payload_size = struct.calcsize("Ibh")
+
+payload_size = OfferPacket.payload_size
 
 client.bind(("", server_port))
 while True:
@@ -23,17 +26,22 @@ while True:
             # client closed after last message, assume all is well
             print("Client Closed")
         else:
-            raise IOError("Truncated message")
+            # raise IOError("Truncated message")
+            print("Truncated message")
+            continue
 
-    print(data)
-    packed_msg_size = data[:payload_size]
-    data = struct.unpack('Ibh',packed_msg_size)
-    print(data)
 
-    if not OfferPacket.validatePacket(data):
+
+    if not OfferPacket.validate_packet(data):
         print("Recieved a message which is not an offer message. Please try sending again")
     
-    print(f"Received offer from {addr}, attempting to connect...")
+    port = OfferPacket.get_port_from_data(data)
+    print(port)
+    print(f"Received offer from {addr[0]}, attempting to connect...")
+    Clinet = socket.socket(); 
+    Clinet.connect((addr[0], port))
+
+    
 
 # clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # clientSocket.listen(server_port)

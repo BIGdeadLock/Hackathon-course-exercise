@@ -3,7 +3,9 @@ import struct
 class OfferPacket:
 
     payload_size = struct.calcsize("Ibh")
-
+    tcp_port = None
+    magic_cookie_bytes = None
+    offer_bytes = None
 
     def __init__(self, port):
         self.tcp_port = port
@@ -16,15 +18,22 @@ class OfferPacket:
         return self.data
 
     @staticmethod
-    def validatePacket(payload):
+    def validate_packet(payload):
         """
         The method is used to validate that a packet is indeed an offer packet 
         """
-        packed_msg_size = payload[:payload_size]
+        packed_msg_size = payload[:OfferPacket.payload_size]
         magic_cookie, offer_type, port = struct.unpack('Ibh',packed_msg_size)
-
-#        if magic_cookie
-
-
-x = OfferPacket(111)
-x.data
+        
+        if magic_cookie != OfferPacket.magic_cookie_bytes:
+            return False
+        elif offer_type != OfferPacket.offer_bytes:
+            return False
+        
+        return True
+   
+    @staticmethod
+    def get_port_from_data(payload):
+        packed_msg_size = payload[:OfferPacket.payload_size]
+        magic_cookie, offer_type, port = struct.unpack('Ibh',packed_msg_size)
+        return port
