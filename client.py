@@ -1,13 +1,14 @@
 import socket
 import struct
 from offer import OfferPacket
-
+import scapy.all as scapy
 
 
 serverName='serverName'
 #server_port = 13117
 server_port = 13000
-
+Client = socket.socket(); 
+Client.connect(("172.1.0.42", 13000))
 # Listen for broadcast of UDP from the server
 sentence = print('Client started, listening for offer requests...')
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
@@ -17,6 +18,7 @@ client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
 payload_size = OfferPacket.payload_size
+local_ip = scapy.get_if_addr("eth1")
 
 client.bind(("", server_port))
 while True:
