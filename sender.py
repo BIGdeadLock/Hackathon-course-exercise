@@ -12,7 +12,7 @@ class Sender(Thread):
         Thread.__init__(self)
         self.__port_number = Port
         self.offer_packet = OfferPacket(Port)
-        self.TIME_LIMIT = 2
+        self.TIME_LIMIT = 10
 
     def run(self):
         server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -24,5 +24,6 @@ class Sender(Thread):
 
         while time.time() < future:
             server.sendto(self.offer_packet.getData(), ('<broadcast>', self.__port_number))
+            print("message sent")
             time.sleep(1)
         
