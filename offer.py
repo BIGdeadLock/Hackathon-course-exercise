@@ -23,7 +23,7 @@ class OfferPacket:
         packed_msg_size = payload[:payload_size]
         magic_cookie, offer_type, port = struct.unpack('Ibh',packed_msg_size)
 
-        if magic_cookie
+#        if magic_cookie
 
 
 x = OfferPacket(111)
