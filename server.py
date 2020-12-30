@@ -11,7 +11,7 @@ lock = Lock()
 
 class ClientThread(Thread):
 
-    def __init__(self, connection, time):
+    def __init__(self, connection, time, lock):
         Thread.__init__(self)
         self.connection = connection
         self.time_left = time
@@ -20,11 +20,13 @@ class ClientThread(Thread):
         # self.teams_score = teams_score
         # self.groups_score = groups_score
         # self.teams = teams
+        self.test = []
+        self.lock = lock
+
         
 
-
     def run(self):
-        global teams, groups_score, teams_score, lock
+        global teams, groups_score, teams_score
         # The servers waits for 10 seconds and than send the message to all the clients
         self.connection.settimeout(self.time_left)
         while True:
@@ -35,10 +37,17 @@ class ClientThread(Thread):
                 #  Save the client's team name to a random group
                 choice = random.randint(1,2)
                 self.group = choice
-                lock.acquire()
-                teams[choice].append(self.team_name)
-                lock.release()
-                
+                with lock:
+                    print(self.team_name)
+                    self.test.append(self.team_name)
+                    #time.sleep(0.2)
+                    # teams[choice].append(self.team_name)
+                    teams[choice].append(self.test[0])
+                    print(teams)
+                    self.test.append(self.team_name)
+                    
+
+
             except socket.timeout:
                 break
             
@@ -88,7 +97,7 @@ class ClientThread(Thread):
                 team_names = self.team_name.split("\n")
                 for team in team_names:
                     if team: # Ignore null chars
-                        self.teams_score[team] = 1
+                        teams_score[team] = 1
                 continue
 
         self.connection.close()
@@ -96,6 +105,7 @@ class ClientThread(Thread):
 
 def get_welcome_message():
     global teams
+    print(teams)
     messages = "Welcome to Keyboard Spamming Battle Royale.\nGroup 1:\n==\n"
 
     for team in teams[1]:
@@ -128,10 +138,14 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
     group_message = "Game Over!\n"
     group_message += f"Your group typed {group_score} characters. \n"
     group_message += f"Your rival group typed {other_group_score} characters. \n"
-    if winner_id == 0:
+    if group_score == other_group_score:
         group_message += "ITS A DRAW!\n\n"
     else:
-        group_message += f"Group {winner_id} wins! \n\n"
+        if group_score > other_group_score:
+            group_message += f"Your GROUP wins! \n\n"
+        else:
+            group_message += f"The RIVAL GROUP wins! \n\n"
+
         group_message += "Congratulations to the winners:\n"
         group_message += "==\n"
         for team in teams[winner_id]:
@@ -212,7 +226,7 @@ while True:
             (socket_for_client, client_ip) = ServerSocket.accept()
             t = future - time.time()
             print(f"client with IP address and port: {client_ip}" )
-            thread = ClientThread(socket_for_client, t)
+            thread = ClientThread(socket_for_client, t, lock)
             game_threads.append(thread)
             thread.start()
 
