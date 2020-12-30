@@ -18,6 +18,7 @@ class ClientThread(Thread):
         self.group = 0
         self.teams_score = teams_score
         
+        
 
 
     def run(self):
@@ -28,7 +29,6 @@ class ClientThread(Thread):
                 data = self.connection.recv(2048)
                 if not data: break
                 self.team_name = data.decode("ASCII").strip()
-                print(teams)
                 #  Save the client's team name to a random group
                 choice = random.randint(1,2)
                 self.group = choice
@@ -82,7 +82,6 @@ class ClientThread(Thread):
                 # Bug in the teams dictionary - some team names comes together - split them with /n
                 team_names = self.team_name.split("\n")
                 for team in team_names:
-                    print(team)
                     if team: # Ignore null chars
                         teams_score[team] = 1
                 continue
