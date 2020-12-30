@@ -3,6 +3,8 @@ import struct
 from offer import OfferPacket
 import scapy.all as scapy
 import time 
+import sys, select
+
 #import getch
 import msvcrt
 def run_game():
@@ -18,6 +20,7 @@ def run_game():
             #char = getch.getch()#.decode('ASCII')
             #client.sendall(char.encode('utf-8'))
             char = msvcrt.getch()#.decode('ASCII')
+            
             client.sendall(char)
             if future - time.time() <= 3 and hurry:
                 hurry = False
@@ -26,7 +29,7 @@ def run_game():
                 stop = False
                 print("STOP TYPING!!\nCalculating scores...")
                 break
-        except ConnectionResetError:
+        except (ConnectionResetError , TimeoutError , OSError):
             print("Connection RESET ERROR")
             return None
 
