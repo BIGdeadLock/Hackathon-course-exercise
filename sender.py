@@ -3,9 +3,6 @@ from offer import OfferPacket
 import socket
 import time
 
-
-
-
 class Sender(Thread):
 
     def __init__(self, Port):

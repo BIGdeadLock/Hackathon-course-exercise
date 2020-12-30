@@ -6,45 +6,43 @@ import time
 import sys, select
 from client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
 
-import getch
-# import msvcrt
+#USED FOR LINUX
+#import getch
+#USED FOR WINDOWS
+import msvcrt
+
 def run_game():
+
     #Game runs for 10 seconds
     now = time.time()
     future = now + 10
 
     char =""
     hurry = True
-    # stop =True
     while time.time() < future:
         try:
+            #################
             #  USED FOR LINUX
-            char = getch.getch()#.decode('ASCII')
-            client.sendall(char.encode('utf-8'))
+            #char = getch.getch()#.decode('ASCII')
+            #client.sendall(char.encode('utf-8'))
+            ####################
+
             #################
             #  USED FOR WINDOWS
-            # char = msvcrt.getch()#.decode('ASCII')
-            # client.sendall(char)
+            char = msvcrt.getch()
+            client.sendall(char)
             ####################
 
         except (ConnectionResetError , TimeoutError , OSError):
-            print("Connection RESET ERROR")
+            print("CONNECTION ERROR")
             return None
 
-#server_port = 13117
-# server_port = 2042
-
-# offer = OfferPacket(server_port)
 # Listen for broadcast of UDP from the server
 print('Client started, listening for offer requests...')
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
 
 # Enable broadcasting mode
 client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-# payload_size = OfferPacket.payload_size
-#local_ip = scapy.get_if_addr(scapy.conf.iface)
-# local_ip = scapy.get_if_addr("eth1")
 
 client.bind(("", SERVER_DEST_PORT))
 while True:
@@ -108,5 +106,3 @@ while True:
     except socket.timeout:
         print("Connection time out")
         continue
-
-
