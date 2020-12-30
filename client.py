@@ -79,7 +79,7 @@ while True:
         
 
         #establish my team name and send it to the server
-        team_name ="GUY\n"
+        team_name ="EDEN\n"
         client.sendall(team_name.encode('utf-8'))
 
         #get the welcome message from the server and print to the screen
