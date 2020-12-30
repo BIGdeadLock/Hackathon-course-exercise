@@ -4,24 +4,27 @@ from offer import OfferPacket
 from sender import Sender
 import time
 import random
-from threading import Thread
+from threading import Thread, Lock
 from termcolor import colored
 
+lock = Lock()
 
 class ClientThread(Thread):
 
-    def __init__(self, connection, time, teams_score):
+    def __init__(self, connection, time):
         Thread.__init__(self)
         self.connection = connection
         self.time_left = time
         self.team_name = ""
         self.group = 0
-        self.teams_score = teams_score
-        
+        # self.teams_score = teams_score
+        # self.groups_score = groups_score
+        # self.teams = teams
         
 
 
     def run(self):
+        global teams, groups_score, teams_score, lock
         # The servers waits for 10 seconds and than send the message to all the clients
         self.connection.settimeout(self.time_left)
         while True:
@@ -32,8 +35,10 @@ class ClientThread(Thread):
                 #  Save the client's team name to a random group
                 choice = random.randint(1,2)
                 self.group = choice
+                lock.acquire()
                 teams[choice].append(self.team_name)
-
+                lock.release()
+                
             except socket.timeout:
                 break
             
@@ -42,7 +47,7 @@ class ClientThread(Thread):
                 return None
 
 
-        self.teams_score[self.team_name] = 0
+        teams_score[self.team_name] = 0
         self.connection.sendall(get_welcome_message().encode("utf-8"))
         now = time.time()
         stop_typing = True
@@ -54,7 +59,7 @@ class ClientThread(Thread):
 
                 print(char)
                 char = char.decode("ASCII")
-                self.teams_score[self.team_name] += 1
+                teams_score[self.team_name] += 1
                 groups_score[self.group] += 1
 
                 # Used for bonus - statistics over each char pressed
@@ -63,9 +68,9 @@ class ClientThread(Thread):
                 else:
                     chars_presses[char] += 1
             
-                if (time.time() - now <= 1.5) and stop_typing:
-                    self.connection.sendall("\nSTOP TYPING!!\nCALCULATING THE SCORES...".encode("utf-8"))
-                    stop_typing = False
+                # if (time.time() - now <= 1.5) and stop_typing:
+                #     self.connection.sendall("\nSTOP TYPING!!\nCALCULATING THE SCORES...".encode("utf-8"))
+                #     stop_typing = False
                     
             except socket.timeout:
                 team_message, group_message = get_end_game_message(teams_score[self.team_name],
@@ -83,13 +88,14 @@ class ClientThread(Thread):
                 team_names = self.team_name.split("\n")
                 for team in team_names:
                     if team: # Ignore null chars
-                        teams_score[team] = 1
+                        self.teams_score[team] = 1
                 continue
 
         self.connection.close()
 
 
 def get_welcome_message():
+    global teams
     messages = "Welcome to Keyboard Spamming Battle Royale.\nGroup 1:\n==\n"
 
     for team in teams[1]:
@@ -107,6 +113,7 @@ def get_welcome_message():
 
 
 def get_end_game_message(team_number_of_chars, group_score, other_group_score):
+    global teams
     winner_id = get_winner()
     team_message = f"\nYou pressed {team_number_of_chars} characters"
     if team_number_of_chars <= 100:
@@ -133,6 +140,7 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
     return team_message, group_message
 
 def get_winner():
+    global groups_score
     first_score = groups_score[1]
     second_score = groups_score[2]
 
@@ -204,11 +212,12 @@ while True:
             (socket_for_client, client_ip) = ServerSocket.accept()
             t = future - time.time()
             print(f"client with IP address and port: {client_ip}" )
-            thread = ClientThread(socket_for_client, t, teams_score)
+            thread = ClientThread(socket_for_client, t)
             game_threads.append(thread)
             thread.start()
 
         except socket.timeout:
+            print(len(game_threads))
             for thread in game_threads:
                 print("waiting for threads")
                 thread.join()
