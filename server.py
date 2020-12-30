@@ -5,7 +5,7 @@ from sender import Sender
 import time
 import random
 from threading import Thread, Lock
-from termcolor import colored
+#from termcolor import colored
 
 lock = Lock()
 
@@ -209,7 +209,7 @@ ServerSocket.listen()
     # server_port += 1
     # ServerSocket.bind((local_ip, server_port))
     # ServerSocket.listen()
-print(colored(f"Server Started, listening on IP address {local_ip}",'yellow'))
+print(f"Server Started, listening on IP address {local_ip}",'yellow') #colored
 
 #  Listen to incomming sockets from the clients and handle each one
 ServerSocket.settimeout(10)
@@ -247,7 +247,7 @@ while True:
             thread = ClientThread(socket_for_client, 10, team_name, group)
             game_threads.append(thread)
             # thread.start()
-            print(colored(f"Team {team_name} has conencted to the game","green"))
+            print(f"Team {team_name} has conencted to the game","green")#colored
         except socket.timeout:
             print(len(game_threads))
             # 10 seconds have passed - Start the game
@@ -260,12 +260,12 @@ while True:
                 thread.join()
                 print("Waiting for players to finish")
 
-            print(colored("Game over, sending out offer requests...",'red'))
+            print("Game over, sending out offer requests...",'red')#colored
             time.sleep(5)
             break
 
         except (ConnectionError, ConnectionResetError):
-            print(colored("Error occured, connection to the client was closed. Waiting for the next client",'red'))
+            print("Error occured, connection to the client was closed. Waiting for the next client",'red')#colored
             continue
 
     
