@@ -5,7 +5,8 @@ from sender import Sender
 import time
 import random
 from threading import Thread, Lock
-#from termcolor import colored
+from termcolor import colored
+import operator
 
 lock = Lock()
 
@@ -132,11 +133,11 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
     team_message = f"\nYou pressed {team_number_of_chars} characters"
     if team_number_of_chars <= 100:
         team_message+="\nAre you even trying?\n\n"
-    if team_number_of_chars > 100 and team_number_of_chars <= 150:
+    elif team_number_of_chars > 100 and team_number_of_chars <= 150:
         team_message+="\nPoor Effort! Get Better!\n\n"
-    if team_number_of_chars > 150 and team_number_of_chars <= 250:
+    elif team_number_of_chars > 150 and team_number_of_chars <= 250:
        team_message+="\nGreat Job!\n\n"
-    if team_number_of_chars > 250:
+    elif team_number_of_chars > 250:
         team_message+="\nFANTASTIC! YOU ARE A PRO\n\n"
 
     group_message = "Game Over!\n"
@@ -193,7 +194,7 @@ teams = {1: [], 2: []}
 teams_score = {}
 groups_score = {1: 0, 2: 0}
 chars_presses = {}
-best_team = (0,0)
+best_team = [0,0]
 ######## Game variables ########
 
 
@@ -209,7 +210,7 @@ ServerSocket.listen()
     # server_port += 1
     # ServerSocket.bind((local_ip, server_port))
     # ServerSocket.listen()
-print(f"Server Started, listening on IP address {local_ip}",'yellow') #colored
+print(colored(f"Server Started, listening on IP address {local_ip}",'yellow'))
 
 #  Listen to incomming sockets from the clients and handle each one
 ServerSocket.settimeout(10)
@@ -247,7 +248,7 @@ while True:
             thread = ClientThread(socket_for_client, 10, team_name, group)
             game_threads.append(thread)
             # thread.start()
-            print(f"Team {team_name} has conencted to the game","green")#colored
+            print(colored(f"Team {team_name} has conencted to the game","green"))
         except socket.timeout:
             print(len(game_threads))
             # 10 seconds have passed - Start the game
@@ -259,13 +260,24 @@ while True:
                 print("Waiting for players to finish")
                 thread.join()
                 print("Waiting for players to finish")
+            
+            
+            #update best team in history if the team with best score scored higher
+            max_current_team = max(teams_score.items(), key=operator.itemgetter(1))[0]
+            if teams_score[max_current_team] > best_team[1]:
+                best_team[1] = teams_score[max_current_team]
+                best_team[0] = max_current_team
 
-            print("Game over, sending out offer requests...",'red')#colored
+            print(f"THE TEAM  SCORED HIGHEST IN SERVER HISTORY: {max_charater}")
+            #show most clicked character in server history
+            max_charater = max(chars_presses.items(), key=operator.itemgetter(1))[0]
+            print(f"THE MOST CLICKED CHARACTER IN SERVER HISTORY: {max_charater}")
+            print(colored("Game over, sending out offer requests...",'red'))
             time.sleep(5)
             break
 
         except (ConnectionError, ConnectionResetError):
-            print("Error occured, connection to the client was closed. Waiting for the next client",'red')#colored
+            print(colored("Error occured, connection to the client was closed. Waiting for the next client",'red'))
             continue
 
     
