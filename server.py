@@ -4,19 +4,21 @@ from offer import OfferPacket
 from sender import Sender
 import time
 import random
-from KeyboardHandler import run_game
 from threading import Thread
 from termcolor import colored
 
 
 class ClientThread(Thread):
 
-    def __init__(self, connection, time):
+    def __init__(self, connection, time, teams_score):
         Thread.__init__(self)
         self.connection = connection
         self.time_left = time
         self.team_name = ""
         self.group = 0
+        self.teams_score = teams_score
+        
+
 
     def run(self):
         # The servers waits for 10 seconds and than send the message to all the clients
@@ -25,7 +27,8 @@ class ClientThread(Thread):
             try:
                 data = self.connection.recv(2048)
                 if not data: break
-                self.team_name = data.decode("ASCII")
+                self.team_name = data.decode("ASCII").strip()
+                print(teams)
                 #  Save the client's team name to a random group
                 choice = random.randint(1,2)
                 self.group = choice
@@ -38,8 +41,8 @@ class ClientThread(Thread):
                 print(colored(f"Clinet {self.team_name} closed the connection","red"))
                 return None
 
-        teams_score[self.team_name] = 0
 
+        self.teams_score[self.team_name] = 0
         self.connection.sendall(get_welcome_message().encode("utf-8"))
         now = time.time()
         stop_typing = True
@@ -51,8 +54,7 @@ class ClientThread(Thread):
 
                 print(char)
                 char = char.decode("ASCII")
-
-                teams_score[self.team_name] += 1
+                self.teams_score[self.team_name] += 1
                 groups_score[self.group] += 1
 
                 # Used for bonus - statistics over each char pressed
@@ -61,7 +63,7 @@ class ClientThread(Thread):
                 else:
                     chars_presses[char] += 1
             
-                if (time.time() - now <= 1) and stop_typing:
+                if (time.time() - now <= 1.5) and stop_typing:
                     self.connection.sendall("\nSTOP TYPING!!\nCALCULATING THE SCORES...".encode("utf-8"))
                     stop_typing = False
                     
@@ -76,6 +78,15 @@ class ClientThread(Thread):
             except (ConnectionError, ConnectionResetError):
                 return None
 
+            except KeyError:
+                # Bug in the teams dictionary - some team names comes together - split them with /n
+                team_names = self.team_name.split("\n")
+                for team in team_names:
+                    print(team)
+                    if team: # Ignore null chars
+                        teams_score[team] = 1
+                continue
+
         self.connection.close()
 
 
@@ -83,11 +94,11 @@ def get_welcome_message():
     messages = "Welcome to Keyboard Spamming Battle Royale.\nGroup 1:\n==\n"
 
     for team in teams[1]:
-        messages+= f"{team}"
+        messages+= f"{team}\n"
 
     messages += "Group 2:\n==\n"
     for team in teams[2]:
-        messages+= f"{team}"
+        messages+= f"{team}\n"
 
     messages+="\n"
     messages+="Start pressing keys on your keyboard as fast as you can!!"
@@ -118,7 +129,7 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
         group_message += "Congratulations to the winners:\n"
         group_message += "==\n"
         for team in teams[winner_id]:
-            group_message+= f"{team}"
+            group_message+= f"{team}\n"
 
     return team_message, group_message
 
@@ -144,7 +155,7 @@ def new_game():
     teams = {1: [], 2: []}
     teams_score.clear()
     groups_score = {1: 0, 2: 0}
-    game_threads.clear()
+    #game_threads.clear()
     
 # server_port = 13117
 server_port = 13000
@@ -166,8 +177,13 @@ best_team = (0,0)
 
 # Open port for tcp connection from the client
 ServerSocket = socket.socket()
+# try:
 ServerSocket.bind((local_ip, server_port))
 ServerSocket.listen()
+# except OSError:
+    # server_port += 1
+    # ServerSocket.bind((local_ip, server_port))
+    # ServerSocket.listen()
 print(colored(f"Server Started, listening on IP address {local_ip}",'yellow'))
 
 #  Listen to incomming sockets from the clients and handle each one
@@ -180,11 +196,6 @@ while True:
     #  Start sending offer packets
     Sender(server_port).start()
 
-    # # Open port for tcp connection from the client
-    # ServerSocket = socket.socket()
-    # ServerSocket.bind((local_ip, server_port))
-    # ServerSocket.listen()
-
     #  Listen to incomming sockets from the clients and handle each one
     ServerSocket.settimeout(10)
     future = time.time() + 10
@@ -194,7 +205,7 @@ while True:
             (socket_for_client, client_ip) = ServerSocket.accept()
             t = future - time.time()
             print(f"client with IP address and port: {client_ip}" )
-            thread = ClientThread(socket_for_client, t)
+            thread = ClientThread(socket_for_client, t, teams_score)
             game_threads.append(thread)
             thread.start()
 
@@ -204,6 +215,7 @@ while True:
                 thread.join()
             
             print(colored("Game over, sending out offer requests...",'red'))
+            time.sleep(5)
             break
 
 
