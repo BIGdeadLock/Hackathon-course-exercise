@@ -14,7 +14,7 @@ def run_game():
 
     char =""
     hurry = True
-    stop =True
+    # stop =True
     while time.time() < future:
         try:
             #char = getch.getch()#.decode('ASCII')
@@ -25,17 +25,17 @@ def run_game():
             if future - time.time() <= 3 and hurry:
                 hurry = False
                 print("Hurry!! You have less than 3 seconds left!!")
-            if future - time.time() <= 1 and stop:
-                stop = False
-                print("STOP TYPING!!\nCalculating scores...")
-                break
+            # if future - time.time() <= 1 and stop:
+            #     stop = False
+            #     print("STOP TYPING!!\nCalculating scores...")
+            #     break
         except (ConnectionResetError , TimeoutError , OSError):
             print("Connection RESET ERROR")
             return None
 
 serverName='serverName'
 #server_port = 13117
-server_port = 13000
+server_port = 2042
 
 offer = OfferPacket(server_port)
 # Listen for broadcast of UDP from the server
@@ -47,7 +47,6 @@ client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
 payload_size = OfferPacket.payload_size
 local_ip = scapy.get_if_addr(scapy.conf.iface)
-
 client.bind(("", server_port))
 while True:
     try:
@@ -79,14 +78,14 @@ while True:
         
 
         #establish my team name and send it to the server
-        team_name ="EDEN\n"
+        team_name ="GUY\n"
         client.sendall(team_name.encode('utf-8'))
 
         #get the welcome message from the server and print to the screen
         welcome_message = client.recv(1024*4).decode("ASCII")
         print(welcome_message)
 
-        client.settimeout(10)
+        client.settimeout(50)
 
         #run the game and press as many keys as you can
         run_game()
