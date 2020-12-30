@@ -1,4 +1,4 @@
 import scapy.all as scapy
 
-LOCAL_IP = scapy.get_if_addr("eth0")
+LOCAL_IP = scapy.get_if_addr(scapy.conf.ifcae)
 SERVER_PORT = 2042
