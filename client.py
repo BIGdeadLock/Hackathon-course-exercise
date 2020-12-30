@@ -3,7 +3,8 @@ import struct
 from offer import OfferPacket
 import scapy.all as scapy
 import time 
-import getch
+#import getch
+import msvcrt
 
 def run_game():
     #Game runs for 10 seconds
@@ -14,8 +15,10 @@ def run_game():
     hurry = True
     while time.time() < future:
         try:
-            char = getch.getch()#.decode('ASCII')
-            client.sendall(char.encode('utf-8'))
+            #char = getch.getch()#.decode('ASCII')
+            #client.sendall(char.encode('utf-8'))
+            char = msvcrt.getch()#.decode('ASCII')
+            client.sendall(char)
             if future - time.time() < 3 and hurry:
                 hurry = False
                 print("Hurry!! You have less than 3 seconds left!!")
@@ -72,7 +75,7 @@ while True:
         
 
         #establish my team name and send it to the server
-        team_name ="GUY\n"
+        team_name ="EDEN\n"
         client.sendall(team_name.encode('utf-8'))
 
         #get the welcome message from the server and print to the screen
