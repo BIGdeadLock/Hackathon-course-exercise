@@ -3,7 +3,7 @@ import struct
 from offer import OfferPacket
 import scapy.all as scapy
 import time 
-import msvcrt
+import getch
 
 def run_game():
     #Game runs for 10 seconds
@@ -13,11 +13,18 @@ def run_game():
     char =""
     hurry = True
     while time.time() < future:
-        char = msvcrt.getch()#.decode('ASCII')
-        client.sendall(char)
-        if future - time.time() < 3 and hurry:
-            hurry = False
-            print("Hurry!! You have less than 3 seconds left!!")
+        try:
+            char = getch.getch()#.decode('ASCII')
+            client.sendall(char.encode('utf-8'))
+            if future - time.time() < 3 and hurry:
+                hurry = False
+                print("Hurry!! You have less than 3 seconds left!!")
+            if future - time.time() <= 1:
+                print("STOP TYPING!!\nCalculating scores...")
+                break
+        except ConnectionResetError:
+            print("Connection RESET ERROR")
+            return None
 
 serverName='serverName'
 #server_port = 13117
@@ -25,7 +32,7 @@ server_port = 13000
 
 offer = OfferPacket(server_port)
 # Listen for broadcast of UDP from the server
-sentence = print('Client started, listening for offer requests...')
+print('Client started, listening for offer requests...')
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
 
 # Enable broadcasting mode
@@ -67,9 +74,6 @@ while True:
         #establish my team name and send it to the server
         team_name ="GUY\n"
         client.sendall(team_name.encode('utf-8'))
-            
-        team_name ="GUY2\n"
-        client.sendall(team_name.encode('utf-8'))
 
         #get the welcome message from the server and print to the screen
         welcome_message = client.recv(1024*4).decode("ASCII")
@@ -106,11 +110,3 @@ while True:
     except socket.timeout:
         print("Connection time out")
         continue
-# clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# clientSocket.listen(server_port)
-# clientSocket.connect((serverName, server_port))
-# clientSocket.send(sentence)
-# modifiedSentence = clientSocket.recv(1024)
-# print('from Server:',modifiedSentence)
-#clientSocket.close()
-
