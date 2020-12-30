@@ -4,9 +4,10 @@ from offer import OfferPacket
 import scapy.all as scapy
 import time 
 import sys, select
+from client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
 
-#import getch
-import msvcrt
+import getch
+# import msvcrt
 def run_game():
     #Game runs for 10 seconds
     now = time.time()
@@ -17,27 +18,23 @@ def run_game():
     # stop =True
     while time.time() < future:
         try:
-            #char = getch.getch()#.decode('ASCII')
-            #client.sendall(char.encode('utf-8'))
-            char = msvcrt.getch()#.decode('ASCII')
-            
-            client.sendall(char)
-            if future - time.time() <= 3 and hurry:
-                hurry = False
-                print("Hurry!! You have less than 3 seconds left!!")
-            # if future - time.time() <= 1 and stop:
-            #     stop = False
-            #     print("STOP TYPING!!\nCalculating scores...")
-            #     break
+            #  USED FOR LINUX
+            char = getch.getch()#.decode('ASCII')
+            client.sendall(char.encode('utf-8'))
+            #################
+            #  USED FOR WINDOWS
+            # char = msvcrt.getch()#.decode('ASCII')
+            # client.sendall(char)
+            ####################
+
         except (ConnectionResetError , TimeoutError , OSError):
             print("Connection RESET ERROR")
             return None
 
-serverName='serverName'
 #server_port = 13117
-server_port = 2042
+# server_port = 2042
 
-offer = OfferPacket(server_port)
+# offer = OfferPacket(server_port)
 # Listen for broadcast of UDP from the server
 print('Client started, listening for offer requests...')
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
@@ -45,16 +42,18 @@ client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 # Enable broadcasting mode
 client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-payload_size = OfferPacket.payload_size
-local_ip = scapy.get_if_addr(scapy.conf.iface)
-client.bind(("", server_port))
+# payload_size = OfferPacket.payload_size
+#local_ip = scapy.get_if_addr(scapy.conf.iface)
+# local_ip = scapy.get_if_addr("eth1")
+
+client.bind(("", SERVER_DEST_PORT))
 while True:
     try:
         data, addr = None, None
         while not data:
             data, addr = client.recvfrom(1024)
 
-        if len(data) < payload_size:
+        if len(data) < PAYLOAD_SIZE:
             if not data:
                 # client closed after last message, assume all is well
                 print("Client Closed")
@@ -70,7 +69,6 @@ while True:
             continue
 
         port = OfferPacket.get_port_from_data(data)
-        print(port)
         print(f"Received offer from {addr[0]}, attempting to connect...")
         client = socket.socket(); 
         client.connect((addr[0], port))
@@ -78,8 +76,7 @@ while True:
         
 
         #establish my team name and send it to the server
-        team_name ="GUY\n"
-        client.sendall(team_name.encode('utf-8'))
+        client.sendall(TEAM_NAME.encode('utf-8'))
 
         #get the welcome message from the server and print to the screen
         welcome_message = client.recv(1024*4).decode("ASCII")
@@ -99,20 +96,17 @@ while True:
                 break
             print(end_messages)
             
-    except (ConnectionResetError , TimeoutError , OSError):
+    except (ConnectionResetError , TimeoutError , OSError, ConnectionRefusedError) as e:
+        print(str(e))
         print("Server disconnected, listening for offer requests...")
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
         # Enable broadcasting mode
         client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        client.bind(("", server_port))
+        client.bind(("", SERVER_DEST_PORT))
         continue
-    # except TimeoutError:
-    #     print("Connection Time out")
-    #     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
-    #     # Enable broadcasting mode
-    #     client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    #     client.bind(("", server_port))
-    #     continue
+ 
     except socket.timeout:
         print("Connection time out")
         continue
+
+

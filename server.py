@@ -3,19 +3,23 @@ import scapy.all as scapy
 from offer import OfferPacket
 from sender import Sender
 import time
-import random
+import random, os
 from threading import Thread, Lock
-from termcolor import colored
-import operator
 
-lock = Lock()
+from server_configuration import SERVER_PORT, LOCAL_IP
+try:
+    from termcolor import colored
+except ModuleNotFoundError as i:
+    os.system("pip3 install termcolor")
+finally:
+    from termcolor import colored
+
 
 class ClientThread(Thread):
 
     def __init__(self, connection, game_time, team_name, group_id):
         Thread.__init__(self)
         self.connection = connection
-        # self.connection.setblocking(0)
         self.time_left = game_time
         self.team_name = team_name
         self.group = group_id
@@ -26,32 +30,6 @@ class ClientThread(Thread):
         global teams, groups_score, teams_score
         # The servers waits for 10 seconds and than send the message to all the clients
         self.connection.settimeout(self.time_left)
-        # while True:
-        #     try:
-        #         data = self.connection.recv(2048)
-        #         if not data: break
-        #         self.team_name = data.decode("ASCII").strip()
-        #         #  Save the client's team name to a random group
-        #         choice = random.randint(1,2)
-        #         self.group = choice
-        #         # with lock:
-        #         #     print(self.team_name)
-        #         #     self.test.append(self.team_name)
-        #         #     teams[choice].append(self.test[0])
-        #         #     print(teams)
-        #         #     self.test.append(self.team_name)
-                    
-
-
-        #     except socket.timeout:
-        #         break
-            
-            # except (ConnectionError, ConnectionResetError):
-            #     print(colored(f"Clinet {self.team_name} closed the connection","red"))
-            #     return None
-
-
-        # teams_score[self.team_name] = 0
         try:
             self.connection.sendall(get_welcome_message().encode("utf-8"))
         except (ConnectionError, ConnectionResetError):
@@ -76,11 +54,6 @@ class ClientThread(Thread):
                     chars_presses[char] = 1
                 else:
                     chars_presses[char] += 1
-            
-                # if (time.time() - now <= 1.5) and stop_typing:
-                #     self.connection.sendall("\nSTOP TYPING!!\nCALCULATING THE SCORES...".encode("utf-8"))
-                #     stop_typing = False
-                    
                     
             except socket.timeout:
                 print("Sending end game message")
@@ -184,9 +157,9 @@ def new_game():
     game_threads.clear()
     
 # server_port = 13117
-server_port = 2042
-local_ip = scapy.get_if_addr(scapy.conf.iface)
-#sender = Sender(server_port)
+# SERVER_PORT = 2042
+# local_ip = scapy.get_if_addr(scapy.conf.iface)
+# LOCAL_IP = scapy.get_if_addr("eth1")
 game_threads = []
 
 ######## Game variables ########
@@ -197,40 +170,37 @@ chars_presses = {}
 best_team = [0,0]
 ######## Game variables ########
 
-
-# #  Start sending offer packets
-# sender.start()
-
 # Open port for tcp connection from the client
 ServerSocket = socket.socket()
-# try:
-ServerSocket.bind((local_ip, server_port))
+
+ServerSocket.bind((LOCAL_IP, SERVER_PORT))
 ServerSocket.listen()
-# except OSError:
-    # server_port += 1
-    # ServerSocket.bind((local_ip, server_port))
-    # ServerSocket.listen()
-print(colored(f"Server Started, listening on IP address {local_ip}",'yellow'))
+
+print(colored(f"Server Started, listening on IP address {LOCAL_IP}",'yellow'))
 
 #  Listen to incomming sockets from the clients and handle each one
 ServerSocket.settimeout(10)
-future = time.time() + 10
 ServerSocket.setblocking(0)
 
-    
+##########################
+#  Start game algorithm 
+#     Send Offer packets for 10 seconds over UDP.
+#     Listen to incomming TCP packets over SERVER_PORT
+#      For each client open save the team name and create a new thread.
+#      For each client start the game in a new thread.
+#     Once every client finished playing start the process again
+###########################
 while True:
     #  Start sending offer packets
-    Sender(server_port).start()
+    Sender(SERVER_PORT).start()
 
     #  Listen to incomming sockets from the clients and handle each one
     ServerSocket.settimeout(10)
-    future = time.time() + 10
     new_game()
 
     # Loop for 10 seconds waiting for new clinets. Once 10 seconds have passed
     # Timeout execption will be raised and the game will begin
     while True:
-        # new_game()
         try:
             (socket_for_client, client_ip) = ServerSocket.accept()
             # t = future - time.time()
@@ -247,20 +217,15 @@ while True:
 
             thread = ClientThread(socket_for_client, 10, team_name, group)
             game_threads.append(thread)
-            # thread.start()
             print(colored(f"Team {team_name} has conencted to the game","green"))
         except socket.timeout:
-            print(len(game_threads))
             # 10 seconds have passed - Start the game
             for thread in game_threads:
                 thread.start()
             
             # Wait for all the players to finish
             for thread in game_threads:
-                print("Waiting for players to finish")
-                thread.join()
-                print("Waiting for players to finish")
-            
+                thread.join()            
             
             #update best team in history if the team with best score scored higher
             max_current_team = max(teams_score.items(), key=operator.itemgetter(1))[0]
@@ -273,15 +238,12 @@ while True:
             max_charater = max(chars_presses.items(), key=operator.itemgetter(1))[0]
             print(f"THE MOST CLICKED CHARACTER IN SERVER HISTORY: {max_charater}")
             print(colored("Game over, sending out offer requests...",'red'))
-            time.sleep(5)
+            time.sleep(2)
             break
 
         except (ConnectionError, ConnectionResetError):
             print(colored("Error occured, connection to the client was closed. Waiting for the next client",'red'))
             continue
-
-    
-        
 
 
 ServerSocket.close()
