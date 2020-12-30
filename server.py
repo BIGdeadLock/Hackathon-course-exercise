@@ -11,60 +11,59 @@ lock = Lock()
 
 class ClientThread(Thread):
 
-    def __init__(self, connection, time, lock):
+    def __init__(self, connection, game_time, team_name, group_id):
         Thread.__init__(self)
         self.connection = connection
-        self.time_left = time
-        self.team_name = ""
-        self.group = 0
-        # self.teams_score = teams_score
-        # self.groups_score = groups_score
-        # self.teams = teams
-        self.test = []
-        self.lock = lock
-
+        # self.connection.setblocking(0)
+        self.time_left = game_time
+        self.team_name = team_name
+        self.group = group_id
+    
         
 
     def run(self):
         global teams, groups_score, teams_score
         # The servers waits for 10 seconds and than send the message to all the clients
         self.connection.settimeout(self.time_left)
-        while True:
-            try:
-                data = self.connection.recv(2048)
-                if not data: break
-                self.team_name = data.decode("ASCII").strip()
-                #  Save the client's team name to a random group
-                choice = random.randint(1,2)
-                self.group = choice
-                with lock:
-                    print(self.team_name)
-                    self.test.append(self.team_name)
-                    #time.sleep(0.2)
-                    # teams[choice].append(self.team_name)
-                    teams[choice].append(self.test[0])
-                    print(teams)
-                    self.test.append(self.team_name)
+        # while True:
+        #     try:
+        #         data = self.connection.recv(2048)
+        #         if not data: break
+        #         self.team_name = data.decode("ASCII").strip()
+        #         #  Save the client's team name to a random group
+        #         choice = random.randint(1,2)
+        #         self.group = choice
+        #         # with lock:
+        #         #     print(self.team_name)
+        #         #     self.test.append(self.team_name)
+        #         #     teams[choice].append(self.test[0])
+        #         #     print(teams)
+        #         #     self.test.append(self.team_name)
                     
 
 
-            except socket.timeout:
-                break
+        #     except socket.timeout:
+        #         break
             
-            except (ConnectionError, ConnectionResetError):
-                print(colored(f"Clinet {self.team_name} closed the connection","red"))
+            # except (ConnectionError, ConnectionResetError):
+            #     print(colored(f"Clinet {self.team_name} closed the connection","red"))
+            #     return None
+
+
+        # teams_score[self.team_name] = 0
+        try:
+            self.connection.sendall(get_welcome_message().encode("utf-8"))
+        except (ConnectionError, ConnectionResetError):
+                print("Error occured, connection was closed")
                 return None
 
-
-        teams_score[self.team_name] = 0
-        self.connection.sendall(get_welcome_message().encode("utf-8"))
         now = time.time()
         stop_typing = True
         while True:
             try:
                 char = self.connection.recv(1024)
                 if not char:
-                    continue
+                    break
 
                 print(char)
                 char = char.decode("ASCII")
@@ -81,15 +80,20 @@ class ClientThread(Thread):
                 #     self.connection.sendall("\nSTOP TYPING!!\nCALCULATING THE SCORES...".encode("utf-8"))
                 #     stop_typing = False
                     
+                    
             except socket.timeout:
+                print("Sending end game message")
                 team_message, group_message = get_end_game_message(teams_score[self.team_name],
                 groups_score[self.group],groups_score[get_rival_group_number(self.group)])
 
-                self.connection.sendall(team_message.encode("utf-8"))
-                self.connection.sendall(group_message.encode("utf-8"))
+
+                end_game_message = team_message + group_message
+                self.connection.sendall(end_game_message.encode("utf-8"))
+                # self.connection.sendall(group_message.encode("utf-8"))
                 break
             
             except (ConnectionError, ConnectionResetError):
+                print("Error occured, connection was closed")
                 return None
 
             except KeyError:
@@ -99,7 +103,7 @@ class ClientThread(Thread):
                     if team: # Ignore null chars
                         teams_score[team] = 1
                 continue
-
+            
         self.connection.close()
 
 
@@ -142,9 +146,9 @@ def get_end_game_message(team_number_of_chars, group_score, other_group_score):
         group_message += "ITS A DRAW!\n\n"
     else:
         if group_score > other_group_score:
-            group_message += f"Your GROUP wins! \n\n"
+            group_message += f"YOUR group wins! \n\n"
         else:
-            group_message += f"The RIVAL GROUP wins! \n\n"
+            group_message += f"The RIVAL group wins! \n\n"
 
         group_message += "Congratulations to the winners:\n"
         group_message += "==\n"
@@ -176,10 +180,10 @@ def new_game():
     teams = {1: [], 2: []}
     teams_score.clear()
     groups_score = {1: 0, 2: 0}
-    #game_threads.clear()
+    game_threads.clear()
     
 # server_port = 13117
-server_port = 13000
+server_port = 2042
 local_ip = scapy.get_if_addr(scapy.conf.iface)
 #sender = Sender(server_port)
 game_threads = []
@@ -210,36 +214,62 @@ print(colored(f"Server Started, listening on IP address {local_ip}",'yellow'))
 #  Listen to incomming sockets from the clients and handle each one
 ServerSocket.settimeout(10)
 future = time.time() + 10
+ServerSocket.setblocking(0)
 
     
 while True:
-    
     #  Start sending offer packets
     Sender(server_port).start()
 
     #  Listen to incomming sockets from the clients and handle each one
     ServerSocket.settimeout(10)
     future = time.time() + 10
+    new_game()
+
+    # Loop for 10 seconds waiting for new clinets. Once 10 seconds have passed
+    # Timeout execption will be raised and the game will begin
     while True:
-        new_game()
+        # new_game()
         try:
             (socket_for_client, client_ip) = ServerSocket.accept()
-            t = future - time.time()
+            # t = future - time.time()
+            # socket_for_client.setblocking(0) # If no data recieived the .recv function will not block the program
             print(f"client with IP address and port: {client_ip}" )
-            thread = ClientThread(socket_for_client, t, lock)
-            game_threads.append(thread)
-            thread.start()
+            data = socket_for_client.recv(2048)
+            if not data: continue
+            team_name = data.decode("ASCII").strip()
+            #  Save the client's team name to a random group
+            choice = random.randint(1,2)
+            group = choice
+            teams[choice].append(team_name)
+            teams_score[team_name] = 0
 
+            thread = ClientThread(socket_for_client, 10, team_name, group)
+            game_threads.append(thread)
+            # thread.start()
+            print(colored(f"Team {team_name} has conencted to the game","green"))
         except socket.timeout:
             print(len(game_threads))
+            # 10 seconds have passed - Start the game
             for thread in game_threads:
-                print("waiting for threads")
-                thread.join()
+                thread.start()
             
+            # Wait for all the players to finish
+            for thread in game_threads:
+                print("Waiting for players to finish")
+                thread.join()
+                print("Waiting for players to finish")
+
             print(colored("Game over, sending out offer requests...",'red'))
             time.sleep(5)
             break
 
+        except (ConnectionError, ConnectionResetError):
+            print(colored("Error occured, connection to the client was closed. Waiting for the next client",'red'))
+            continue
+
+    
+        
 
 
 ServerSocket.close()

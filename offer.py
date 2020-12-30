@@ -4,7 +4,7 @@ class OfferPacket:
 
     payload_size = struct.calcsize("Ibh")
     tcp_port = None
-    magic_cookie_bytes = int("0xfebedeef", 0)
+    magic_cookie_bytes = int("0xfeedbeef", 0)
     offer_bytes = int("0x2", 0)
 
     def __init__(self, port):
