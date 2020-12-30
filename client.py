@@ -5,7 +5,6 @@ import scapy.all as scapy
 import time 
 #import getch
 import msvcrt
-
 def run_game():
     #Game runs for 10 seconds
     now = time.time()
@@ -13,16 +12,18 @@ def run_game():
 
     char =""
     hurry = True
+    stop =True
     while time.time() < future:
         try:
             #char = getch.getch()#.decode('ASCII')
             #client.sendall(char.encode('utf-8'))
             char = msvcrt.getch()#.decode('ASCII')
             client.sendall(char)
-            if future - time.time() < 3 and hurry:
+            if future - time.time() <= 3 and hurry:
                 hurry = False
                 print("Hurry!! You have less than 3 seconds left!!")
-            if future - time.time() <= 1:
+            if future - time.time() <= 1 and stop:
+                stop = False
                 print("STOP TYPING!!\nCalculating scores...")
                 break
         except ConnectionResetError:
