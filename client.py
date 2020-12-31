@@ -4,7 +4,8 @@ from offer import OfferPacket
 import scapy.all as scapy
 import time 
 import sys, select
-from Configurations.client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
+from Configurations import client_configuration
+
 
 try:
     #USED FOR LINUX
@@ -22,7 +23,9 @@ class GameClient:
         self.client_tcp_socket = None
 
     def run_game(self):
-
+        """
+        The method will run the game logic
+        """
         #Game runs for 10 seconds
         now = time.time()
         future = now + 10
@@ -51,22 +54,27 @@ class GameClient:
                 return None
 
     def start_listening(self):
+        """
+        The method will handle all the client port listening logic
+        """
         #creating new socket for the udp connection
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
 
         # Enable broadcasting mode
         client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        client.bind(("", SERVER_DEST_PORT))
+        client.bind(("", client_configuration.SERVER_DEST_PORT))
         return client
 
     def get_game_details(self): 
-
+            '''
+            The method will retrieve the details for playing the game: port, data and address from the server
+            '''
             data, addr = None, None
             while not data:
                 data, addr = self.client_offer_socket.recvfrom(1024)
 
-            if len(data) < PAYLOAD_SIZE:
+            if len(data) < client_configuration.PAYLOAD_SIZE:
                 if not data:
                     # client closed after last message, assume all is well
                     print("Client Closed")
@@ -86,7 +94,9 @@ class GameClient:
         
 
     def game_handler(self):
-
+        '''
+        The method will handle the connection with the server: receive, send messages and invoke the game running 
+        '''
         while True:
             try:
                 port, addr = self.get_game_details()
@@ -99,14 +109,13 @@ class GameClient:
                 print("Connection Established")
                 
                 #establish my team name and send it to the server
-                self.client_tcp_socket.sendall(TEAM_NAME.encode('utf-8'))
+                self.client_tcp_socket.sendall(client_configuration.TEAM_NAME.encode('utf-8'))
 
                 #get the welcome message from the server and print to the screen
                 welcome_message = self.client_tcp_socket.recv(1024*4).decode("ASCII")
                 print(welcome_message)
 
-                self.client_tcp_socket.settimeout(50)
-
+                self.client_tcp_socket.settimeout(client_configuration.SOCKET_TIMEOUT)
                 #run the game and press as many keys as you can
                 client.run_game()
 
@@ -130,6 +139,9 @@ class GameClient:
                 continue
 
     def close_connection(self):
+        """
+        The method will close the tcp connection of the server.
+        """
         self.client_tcp_socket.close()
 
 client = GameClient()
