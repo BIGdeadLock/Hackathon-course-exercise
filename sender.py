@@ -1,5 +1,5 @@
 from threading import Thread
-from offer import OfferPacket
+from Configurations.offer import OfferPacket
 import socket
 import time
 

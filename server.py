@@ -1,6 +1,5 @@
 import socket 
 import scapy.all as scapy
-from offer import OfferPacket
 from sender import Sender
 import time
 import random, os
@@ -87,6 +86,8 @@ class GameServer:
         """
         The method will show some special statistics on the screen
         """
+        if not self.best_team[0] or not self.teams_score:
+            return None
         #  Update best team in history if the team with best score scored higher
         max_current_team = max(self.teams_score.items(), key=operator.itemgetter(1))[0]
         if self.teams_score[max_current_team] > self.best_team[1]:

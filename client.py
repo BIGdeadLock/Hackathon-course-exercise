@@ -1,6 +1,5 @@
 import socket
 import struct
-from offer import OfferPacket
 import scapy.all as scapy
 import time 
 import sys, select
@@ -19,6 +18,7 @@ class GameClient:
     def __init__(self):
         # Listen for broadcast of UDP from the server
         print('Client started, listening for offer requests...')
+        #self.client_offer_socket = self.start_listening()
         self.client_offer_socket = self.start_listening()
         self.client_tcp_socket = None
 
@@ -85,11 +85,11 @@ class GameClient:
                     return None, 0 
 
             #check if the data received is indeed the offer packet desired
-            if not OfferPacket.validate_packet(data):
+            if not client_configuration.OfferPacket.validate_packet(data):
                 print("Recieved a message which is not an offer message. Please try sending again")
                 return None, 0
 
-            port = OfferPacket.get_port_from_data(data)
+            port = client_configuration.OfferPacket.get_port_from_data(data)
             return port, addr
         
 
@@ -131,7 +131,8 @@ class GameClient:
                 
             except (ConnectionResetError , TimeoutError , OSError, ConnectionRefusedError):                
                 print("Server disconnected, listening for offer requests...")
-                self.client_offer_socket = self.start_listening()
+                # self.
+                # self.client_offer_socket = self.start_listening()
                 continue
         
             except socket.timeout:

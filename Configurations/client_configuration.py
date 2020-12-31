@@ -1,5 +1,6 @@
-from.offer import OfferPacket
+from Configurations.offer import OfferPacket
 import scapy.all as scapy
+
 
 PAYLOAD_SIZE = OfferPacket.payload_size
 LOCAL_IP = scapy.get_if_addr(scapy.conf.iface)
