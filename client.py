@@ -26,7 +26,7 @@ def run_game():
             #################
             #  USED FOR LINUX
             try:
-                char = getch.getch()#.decode('ASCII')
+                char = getch.getch()
                 client.sendall(char.encode('utf-8'))
             ####################
 
