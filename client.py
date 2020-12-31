@@ -20,8 +20,8 @@ def run_game():
     future = now + 10
 
     char =""
-    hurry = True
     while time.time() < future:
+        #  START CATCHING KEYBOARD HIT FROM THE USER
         try:
             #################
             #  USED FOR LINUX
