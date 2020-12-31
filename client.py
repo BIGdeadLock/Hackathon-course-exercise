@@ -129,11 +129,11 @@ class GameClient:
                         break
                     print(end_messages)
                 
-            except (ConnectionResetError , TimeoutError , OSError):                
+            except (ConnectionResetError , TimeoutError):                
                 print("Server disconnected, listening for offer requests...")
                 continue
                 
-            except ConnectionRefusedError:
+            except OSError:
                 print("Server refused the connection, wrong ip or port used for the connection...")
                 continue
 
