@@ -129,12 +129,14 @@ class GameClient:
                         break
                     print(end_messages)
                 
-            except (ConnectionResetError , TimeoutError , OSError, ConnectionRefusedError):                
+            except (ConnectionResetError , TimeoutError , OSError:                
                 print("Server disconnected, listening for offer requests...")
-                # self.
-                # self.client_offer_socket = self.start_listening()
                 continue
-        
+                
+            except ConnectionRefusedError:
+                print("Server refused the connection, wrong ip or port used for the connection...")
+                continue
+
             except socket.timeout:
                 print("Connection time out, trying to reconnect..")
                 continue

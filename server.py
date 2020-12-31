@@ -153,6 +153,7 @@ class GameServer:
                     
                     self.show_special_statistics()
                     time.sleep(server_configuration.BUSY_WAITING_AVOIDANCE)
+                    print(colored("Game over, sending out offer requests...",'red'))
                     break
 
                 except (ConnectionError, ConnectionResetError):
