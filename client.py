@@ -6,10 +6,12 @@ import time
 import sys, select
 from client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
 
-#USED FOR LINUX
-#import getch
-#USED FOR WINDOWS
-import msvcrt
+try:
+    #USED FOR LINUX
+    import getch
+except ModuleNotFoundError:
+    #USED FOR WINDOWS
+    import msvcrt
 
 def run_game():
 
@@ -23,15 +25,17 @@ def run_game():
         try:
             #################
             #  USED FOR LINUX
-            #char = getch.getch()#.decode('ASCII')
-            #client.sendall(char.encode('utf-8'))
+            try:
+                char = getch.getch()#.decode('ASCII')
+                client.sendall(char.encode('utf-8'))
             ####################
 
-            #################
-            #  USED FOR WINDOWS
-            char = msvcrt.getch()
-            client.sendall(char)
-            ####################
+            except NameError:
+                #################
+                #  USED FOR WINDOWS
+                char = msvcrt.getch()
+                client.sendall(char)
+                ####################
 
         except (ConnectionResetError , TimeoutError , OSError):
             print("CONNECTION ERROR")
@@ -95,7 +99,6 @@ while True:
             print(end_messages)
             
     except (ConnectionResetError , TimeoutError , OSError, ConnectionRefusedError) as e:
-        print(str(e))
         print("Server disconnected, listening for offer requests...")
         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) 
         # Enable broadcasting mode
