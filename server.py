@@ -6,7 +6,7 @@ import time
 import random, os
 import operator
 from client_handler import ClientThread
-from Configurations.server_configuration import SERVER_PORT, LOCAL_IP
+from Configurations import server_configuration
 try:
     from termcolor import colored
 except ModuleNotFoundError as i:
@@ -37,14 +37,14 @@ class GameServer:
         # Open port for tcp connection from the client
         server_socket = socket.socket()
 
-        server_socket.bind((LOCAL_IP, SERVER_PORT))
+        server_socket.bind((server_configuration.LOCAL_IP, server_configuration.SERVER_PORT))
         server_socket.listen()
 
         print(colored(f"Server Started, listening on IP address {LOCAL_IP}",'yellow'))
 
-        #  Listen to incomming sockets from the clients and handle each one
-        server_socket.settimeout(10)
-        server_socket.setblocking(0)
+        #  Socket configuration:
+        server_socket.settimeout(server_configuration.SOCKET_TIMEOUT)
+        server_socket.setblocking(server_configuration.SOCKET_NONBLOCKING)
         return server_socket
 
     def close_connection(self):
@@ -67,10 +67,13 @@ class GameServer:
         ###########################
         while True:
             #  Start sending offer packets
-            Sender(SERVER_PORT).start()
+            Sender(server_configuration.SERVER_PORT).start()
 
+            ######  TO AVOID BUSY WAITING ########
+            time.sleep(server_configuration.BUSY_WAITING_AVOIDANCE)
+            ######################################
             #  Listen to incomming sockets from the clients and handle each one
-            self.__server_socket.settimeout(10)
+            self.__server_socket.settimeout(server_configuration.SOCKET_TIMEOUT)
             self.new_game()
 
             # Loop for 10 seconds waiting for new clinets. Once 10 seconds have passed
