@@ -10,6 +10,12 @@
   * Each client is handled by a different thread (__concurrency rules__).
   * After 10 seconds the game will begin. 
 
+****************
+To run the game do the following:
+
+ * In one machine, or process - Run the server script by typing __"python server.py"__ in the terminal
+ * In one machine, or process - Run the client script by typing __"python client.py"__ in the terminal
+
 __MAY THE BEST TEAM WIN!__
 
 
