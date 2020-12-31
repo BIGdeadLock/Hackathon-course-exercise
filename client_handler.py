@@ -3,7 +3,7 @@ import time
 import random
 from threading import Thread
 from game_messages import get_end_game_message, get_welcome_message
-from server_configuration import SERVER_PORT, LOCAL_IP
+from Configurations.server_configuration import SERVER_PORT, LOCAL_IP
 from termcolor import colored
 
 

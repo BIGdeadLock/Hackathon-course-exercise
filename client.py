@@ -4,7 +4,7 @@ from offer import OfferPacket
 import scapy.all as scapy
 import time 
 import sys, select
-from client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
+from Configurations.client_configuration import PAYLOAD_SIZE, LOCAL_IP, SERVER_DEST_PORT, TEAM_NAME
 
 try:
     #USED FOR LINUX

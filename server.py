@@ -5,10 +5,8 @@ from sender import Sender
 import time
 import random, os
 import operator
-from threading import Thread, Lock
-from game_messages import get_end_game_message, get_welcome_message
 from client_handler import ClientThread
-from server_configuration import SERVER_PORT, LOCAL_IP
+from Configurations.server_configuration import SERVER_PORT, LOCAL_IP
 try:
     from termcolor import colored
 except ModuleNotFoundError as i:
