@@ -129,7 +129,7 @@ class GameClient:
                         break
                     print(end_messages)
                 
-            except (ConnectionResetError , TimeoutError , OSError:                
+            except (ConnectionResetError , TimeoutError , OSError):                
                 print("Server disconnected, listening for offer requests...")
                 continue
                 
